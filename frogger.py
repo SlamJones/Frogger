@@ -5,23 +5,24 @@ import os
 import random
 
 from graphics import *
+from screeninfo import get_monitors
 
 
 settings = {
     "road_lanes": 6,
     "river_lanes": 4,
-    "max_mobs_per_lane": 2,
+    "max_mobs_per_lane": 3,
     "dist_between_mobs": 450,
     "mob_length": 200,
     "mob_speed": 10,
     "log_speed_min": 2,
     "log_speed_max": 10,
-    "car_speed_min": 5,
+    "car_speed_min": 6,
     "car_speed_max": 16,
     "spawn_rate": 10,
     "spawn_rate_lane": 50,
-    "window_x": 1920,
-    "window_y": 980,
+    "window_x": 800,
+    "window_y": 600,
 }
 
 car_colors = ["black","green4","blue3","red","white","gray","yellow","orange"]
@@ -32,6 +33,17 @@ def init():
     print("Welcome!")
     time.sleep(0.25)
     clearscreen()
+    collect_screen_info()
+    
+def collect_screen_info():
+    print("Monitor info:")
+    try:
+        for m in get_monitors():
+            print(m)
+        settings["window_x"] = m.width
+        settings["window_y"] = m.height - 100
+    except:
+        print("Could not gather screen info! Using default 800x600")
     
 def clearscreen():
     os.system("clear")
@@ -133,6 +145,7 @@ def draw_menu(win):
                 item.draw(win)
         elif choice == "Settings":
             pass
+            #draw_info_box(win,"Coming soon!")
         elif choice == "Quit":
             break
             
@@ -166,6 +179,7 @@ def draw_game(win):
         if i > 0 and i <= river_lanes:
             lane.setFill("blue")
             l_type = "river"
+            lane_speed = random.randrange(settings["log_speed_min"],settings["log_speed_max"])
         elif i > river_lanes and i <= road_lanes+river_lanes:
             lane.setFill("gray")
             l_type = "road"
@@ -173,7 +187,7 @@ def draw_game(win):
         else:
             lane.setFill("green")
             l_type = "grass"
-            lane_speed = random.randrange(settings["log_speed_min"],settings["log_speed_max"])
+            lane_speed = 0
         to_draw.append(lane)
         
         #### lane_full object should contain all data needed to interact with it
