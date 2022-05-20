@@ -20,7 +20,7 @@ settings = {
     "car_speed_min": 6,
     "car_speed_max": 16,
     "spawn_rate": 10,
-    "spawn_rate_lane": 50,
+    "spawn_rate_lane": 100,
     "window_x": 800,
     "window_y": 600,
 }
@@ -217,7 +217,6 @@ def draw_game(win):
     
     ##### MAIN PLAY LOOP #####
     while key != "Escape":
-        redraw(win,frog)
         last_spawn += 1
         for lane in lanes:
             lane["last_spawn"] += 1
@@ -252,6 +251,7 @@ def draw_game(win):
             if len(lane["mobs"]) < settings["max_mobs_per_lane"] and lane["type"] != "grass" and lane["last_spawn"] >= settings["spawn_rate_lane"]:
                 #print("Last spawn: "+str(lane["last_spawn"]))
                 mob = spawn_mob(win,lane,lane_height,lane["direction"])
+                redraw(win,frog)
                 lane["mobs"].append(mob)
                 draw_mobs.append(mob)
                 last_spawn = 0
