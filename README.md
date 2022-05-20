@@ -1,11 +1,11 @@
 # Frogger
-A simple frogger game for practice purposes, made in Python using the graphics.py package
+A simple frogger game for practice purposes, made in Python using the graphics.py package.
 
 Game field is populated with multiple 'lanes', stacked vertically.
 Frog can move up or down lanes, or left and right in the same lane.
 There are three types of lanes:
-- Grass lanes allow no traffic.  There is a grass lane at the top and botton
-- Road lanes allow car traffic.  Cars are relatively fast, and will kill your frog if you collide with one
+- Grass lanes allow no traffic.  There is a grass lane at the top and bottom of the screen.
+- Road lanes allow car traffic.  Cars are relatively fast, and will kill your frog if you collide with one.
 - River lanes allow log traffic.  Logs are slower than cars, but working the opposite way.  The frog can only traverse the river by hopping from log to log.  If the frog hops into a section of the river that does not have a log, then the frog will die.
 
 If the frog makes it from the bottom grass lane to the top grass lane, then the player wins that round.
