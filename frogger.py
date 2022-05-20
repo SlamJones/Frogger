@@ -23,6 +23,7 @@ settings = {
     "spawn_rate_lane": 100,
     "window_x": 800,
     "window_y": 600,
+    "frame_rate": 30,
 }
 
 car_colors = ["black","green4","blue3","red","white","gray","yellow","orange"]
@@ -49,7 +50,7 @@ def clearscreen():
     os.system("clear")
     
 def open_window():
-    win = GraphWin("Frogger",settings["window_x"],settings["window_y"])
+    win = GraphWin("Frogger",settings["window_x"],settings["window_y"],autoflush=False)
     win.setBackground("black")
     return(win)
 
@@ -174,6 +175,8 @@ def draw_game(win):
     P1Y = 0
     P2Y = lane_height
     
+    
+    ##### Create lanes and assign values
     for i in range(total_lanes):
         lane = Rectangle(Point(P1X,P1Y),Point(P2X,P2Y))
         if i > 0 and i <= river_lanes:
@@ -213,10 +216,27 @@ def draw_game(win):
     win.update()
         
     key = ""
-    last_spawn = 0
+    last_spawn = 1000
+    timer = 1
+    lowest_fps = 1000
+    start_time = time.time()
     
     ##### MAIN PLAY LOOP #####
     while key != "Escape":
+        ##### Timer fucntions for calculating effective frame rate
+        ##### Probably slows the whole thing down
+        ##### But it can help identify issues
+        
+        timer = time.time() - start_time
+        print("Last tick: "+str(timer))
+        efps = int(1/timer)
+        print("TARGET FPS: "+str(settings["frame_rate"]))
+        print("Effective fps: "+str(efps))
+        if efps < lowest_fps:
+            lowest_fps = efps
+        print("Lowest fps: "+str(lowest_fps))
+        start_time = time.time()
+        
         last_spawn += 1
         for lane in lanes:
             lane["last_spawn"] += 1
@@ -239,6 +259,8 @@ def draw_game(win):
         if frog.getCenter().getY() < lane_height:
             draw_info_box(win,"You win!")
             break
+            
+        #print(str(time.time() - start_time)+" time taken to process user input")
 
         #### Pick a random lane
         #### Spawn mobs if needed
@@ -258,6 +280,7 @@ def draw_game(win):
                 lane["last_spawn"] = 0
                 #print("Spawned mob")
                 
+        #print(str(time.time() - start_time)+" time taken to spawn mobs")
         
         #### Move all mobs in all lanes
         for lane in lanes:
@@ -275,19 +298,32 @@ def draw_game(win):
                     if mob.getP2().getX() < 0:
                         lane["mobs"].remove(mob)
                         undraw_mobs.append(mob)
-                
                         
+        #print(str(time.time() - start_time)+" time taken to move mobs")
+                
+        #### If any need to be drawn or undrawn, do so now                
         for mob in draw_mobs:
             mob.draw(win)
+            print(str(len(draw_mobs))+" mobs drawn")
         draw_mobs.clear()
         for mob in undraw_mobs:
             mob.undraw()
+            print(str(len(undraw_mobs))+" mobs undrawn")
         undraw_mobs.clear()
         
+        #print(str(time.time() - start_time)+" time taken to draw/undraw mobs")
+        
         #### Check for collision
+        #### Perhaps instead of checking each lane, assign a value to frog...
+        #### ...which represents the lane that the frog is in
         frogY = frog.getCenter().getY()
+        frogX = frog.getCenter().getX()
         for lane in lanes:
             if frogY > lane["lane"].getP1().getY() and frogY < lane["lane"].getP2().getY():
+                #### Fell state indicates the frog died
+                #### For road/grass lanes, default state is NOT fell
+                #### For river lanes, default state is fell
+                #### This state is reversed if frog is within bounds of a log
                 if lane["type"] == "river":
                     fell = True
                 for mob in lane["mobs"]:
@@ -295,9 +331,6 @@ def draw_game(win):
                     P1Y = mob.getP1().getY()
                     P2X = mob.getP2().getX()
                     P2Y = mob.getP2().getY()
-
-                    frogX = frog.getCenter().getX()
-                    frogY = frog.getCenter().getY()
 
                     if lane["type"] == "road":
                         if frogX > P1X and frogX < P2X and frogY > P1Y and frogY < P2Y:
@@ -309,17 +342,19 @@ def draw_game(win):
                                 frog.move(lane["speed"],0)
                             else:
                                 frog.move(-lane["speed"],0)
-        frogX = frog.getCenter().getX()
         if fell or (frogX < 0 or frogX > settings["window_x"]):
             draw_info_box(win,"Oops!  You lose!")
             key = "Escape"
             break
             
+        #print(str(time.time() - start_time)+" time taken to check collision")
+        #print(str(time.time() - start_time)+" time taken total per tick")
+        clearscreen()
                     
+        #### Attempted frame rate of 30 frames per second
+        update(settings["frame_rate"])
         
-        update(30)
-        
-    #### When player has hit "Escape" key, proceed to:
+    #### When player has hit "Escape" key, proceed to erase playfield
     for item in to_draw:
         item.undraw()
     for lane in lanes:
