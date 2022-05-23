@@ -220,6 +220,8 @@ def draw_game(win):
     timer = 1
     lowest_fps = 1000
     avg_fps = 0
+    frames = 0
+    ticks = 0
     efps = 0
     start_time = time.time()
     
@@ -232,11 +234,13 @@ def draw_game(win):
         clearscreen()
         timer = time.time() - start_time
         print("Last tick: "+str(round(timer,3)/1000)+"ms")
-        avg_fps = (avg_fps+efps)/2
+        frames += efps
+        ticks += 1
+        avg_fps = frames/ticks
         efps = int(1/timer)
         print("TARGET FPS: "+str(settings["frame_rate"]))
-        print("Effective fps: "+str(efps))
         print("Average fps: "+str(round(avg_fps)))
+        print("Effective fps: "+str(efps))
         if efps < lowest_fps:
             lowest_fps = efps
         print("Lowest fps: "+str(lowest_fps))
