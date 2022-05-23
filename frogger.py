@@ -194,7 +194,7 @@ def draw_game(win):
         to_draw.append(lane)
         
         #### lane_full object should contain all data needed to interact with it
-        lane_full = {"lane": lane, "type": l_type, "mobs": [], "direction": "right", "last_spawn": 0, "speed": lane_speed}
+        lane_full = {"lane": lane, "type": l_type, "mobs": [], "direction": "right", "last_spawn": 1000, "speed": lane_speed}
         if random.choice([True,False]):
             lane_full["direction"] = "left"
         
@@ -219,6 +219,8 @@ def draw_game(win):
     last_spawn = 1000
     timer = 1
     lowest_fps = 1000
+    avg_fps = 0
+    efps = 0
     start_time = time.time()
     
     ##### MAIN PLAY LOOP #####
@@ -227,11 +229,14 @@ def draw_game(win):
         ##### Probably slows the whole thing down
         ##### But it can help identify issues
         
+        clearscreen()
         timer = time.time() - start_time
-        print("Last tick: "+str(timer))
+        print("Last tick: "+str(round(timer,3)/1000)+"ms")
+        avg_fps = (avg_fps+efps)/2
         efps = int(1/timer)
         print("TARGET FPS: "+str(settings["frame_rate"]))
         print("Effective fps: "+str(efps))
+        print("Average fps: "+str(round(avg_fps)))
         if efps < lowest_fps:
             lowest_fps = efps
         print("Lowest fps: "+str(lowest_fps))
@@ -271,7 +276,7 @@ def draw_game(win):
             #### Make sure enough time has passed since last spawn on this lane
             #### And make sure enough time has passed total
             if len(lane["mobs"]) < settings["max_mobs_per_lane"] and lane["type"] != "grass" and lane["last_spawn"] >= settings["spawn_rate_lane"]:
-                #print("Last spawn: "+str(lane["last_spawn"]))
+                print("Last spawn: "+str(lane["last_spawn"]/1000)+"ms")
                 mob = spawn_mob(win,lane,lane_height,lane["direction"])
                 redraw(win,frog)
                 lane["mobs"].append(mob)
@@ -283,8 +288,10 @@ def draw_game(win):
         #print(str(time.time() - start_time)+" time taken to spawn mobs")
         
         #### Move all mobs in all lanes
+        moved = 0
         for lane in lanes:
             for mob in lane["mobs"]:
+                moved += 1
                 if lane["direction"] == "right":
                     mob.move(lane["speed"],0)
                     #mob.move(settings["mob_speed"],0)
@@ -298,6 +305,7 @@ def draw_game(win):
                     if mob.getP2().getX() < 0:
                         lane["mobs"].remove(mob)
                         undraw_mobs.append(mob)
+        print("Moved {} mobs".format(str(moved)))
                         
         #print(str(time.time() - start_time)+" time taken to move mobs")
                 
@@ -347,11 +355,10 @@ def draw_game(win):
             key = "Escape"
             break
             
-        #print(str(time.time() - start_time)+" time taken to check collision")
-        #print(str(time.time() - start_time)+" time taken total per tick")
-        clearscreen()
+        print(str((time.time() - start_time)/1000)+"ms taken to check collision")
+        print(str((time.time() - start_time)/1000)+"ms taken total per tick")
                     
-        #### Attempted frame rate of 30 frames per second
+        #### Attempted frame rate is defined in settings
         update(settings["frame_rate"])
         
     #### When player has hit "Escape" key, proceed to erase playfield
