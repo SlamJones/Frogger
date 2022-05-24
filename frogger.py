@@ -19,7 +19,7 @@ settings = {
     "log_speed_max": 10,
     "car_speed_min": 6,
     "car_speed_max": 16,
-    "spawn_rate": 10,
+    "spawn_rate": 2,
     "spawn_rate_lane": 100,
     "window_x": 800,
     "window_y": 600,
@@ -312,7 +312,7 @@ def draw_game(win):
         moved = 0
         for lane in lanes:
             for mob in lane["mobs"]:
-                moved += 1
+                moved += lane["speed"]
                 if lane["direction"] == "right":
                     mob.move(lane["speed"],0)
                     #mob.move(settings["mob_speed"],0)
