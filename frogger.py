@@ -26,7 +26,7 @@ settings = {
     "frame_rate": 30,
 }
 
-car_colors = ["black","green4","blue3","red","white","gray","yellow","orange"]
+car_colors = ["black","green4","blue3","red","white","bisque","yellow","orange"]
 
 
 def init():
@@ -211,6 +211,28 @@ def draw_game(win):
     frog.setWidth(3)
     to_draw.append(frog)
         
+    ##### Setup text boxes to display debug info here
+    button_size = 50
+    
+    P1X = 0
+    P2X = button_size*2
+    P1Y = 0
+    P2Y = button_size
+    
+    text_box = Rectangle(Point(P1X,P1Y),Point(P2X,P2Y))
+    text_box.setFill("black")
+    text_box.setOutline("white")
+    text_box.setWidth(3)
+    to_draw.append(text_box)
+    
+    text_box_text = Text(Point((P1X+P2X)/2,(P1Y+P2Y)/2),"0")
+    text_box_text.setTextColor("white")
+    text_box_text.setSize(12)
+    text_box_text.setStyle("bold")
+    to_draw.append(text_box_text)
+        
+        
+        
     for item in to_draw:
         item.draw(win)
     win.update()
@@ -224,6 +246,7 @@ def draw_game(win):
     ticks = 0
     efps = 0
     start_time = time.time()
+    last_ms = 0
     
     ##### MAIN PLAY LOOP #####
     while key != "Escape":
@@ -231,20 +254,13 @@ def draw_game(win):
         ##### Probably slows the whole thing down
         ##### But it can help identify issues
         
-        clearscreen()
+        ### Get timer when tick starts, using start time from previous tick
         timer = time.time() - start_time
-        print("Last tick: "+str(round(timer,3)/1000)+"ms")
-        frames += efps
-        ticks += 1
-        avg_fps = frames/ticks
-        efps = int(1/timer)
-        print("TARGET FPS: "+str(settings["frame_rate"]))
-        print("Average fps: "+str(round(avg_fps)))
-        print("Effective fps: "+str(efps))
-        if efps < lowest_fps:
-            lowest_fps = efps
-        print("Lowest fps: "+str(lowest_fps))
+        
+        ### Set start time for next tick
         start_time = time.time()
+        
+        text_box_text.setText(str(round(avg_fps,1))+" fps")
         
         last_spawn += 1
         for lane in lanes:
@@ -269,7 +285,8 @@ def draw_game(win):
             draw_info_box(win,"You win!")
             break
             
-        #print(str(time.time() - start_time)+" time taken to process user input")
+        timer = time.time() - start_time
+        #print(""+str(round(timer*100,1))+"ms to process user input")
 
         #### Pick a random lane
         #### Spawn mobs if needed
@@ -280,7 +297,7 @@ def draw_game(win):
             #### Make sure enough time has passed since last spawn on this lane
             #### And make sure enough time has passed total
             if len(lane["mobs"]) < settings["max_mobs_per_lane"] and lane["type"] != "grass" and lane["last_spawn"] >= settings["spawn_rate_lane"]:
-                print("Last spawn: "+str(lane["last_spawn"]/1000)+"ms")
+                #print("Last spawn: "+str(lane["last_spawn"])+" ticks")
                 mob = spawn_mob(win,lane,lane_height,lane["direction"])
                 redraw(win,frog)
                 lane["mobs"].append(mob)
@@ -309,18 +326,18 @@ def draw_game(win):
                     if mob.getP2().getX() < 0:
                         lane["mobs"].remove(mob)
                         undraw_mobs.append(mob)
-        print("Moved {} mobs".format(str(moved)))
+        #print("Moved {} mobs".format(str(moved)))
                         
         #print(str(time.time() - start_time)+" time taken to move mobs")
                 
         #### If any need to be drawn or undrawn, do so now                
         for mob in draw_mobs:
             mob.draw(win)
-            print(str(len(draw_mobs))+" mobs drawn")
+            #print(str(len(draw_mobs))+" mobs drawn")
         draw_mobs.clear()
         for mob in undraw_mobs:
             mob.undraw()
-            print(str(len(undraw_mobs))+" mobs undrawn")
+            #print(str(len(undraw_mobs))+" mobs undrawn")
         undraw_mobs.clear()
         
         #print(str(time.time() - start_time)+" time taken to draw/undraw mobs")
@@ -359,11 +376,18 @@ def draw_game(win):
             key = "Escape"
             break
             
-        print(str((time.time() - start_time)/1000)+"ms taken to check collision")
-        print(str((time.time() - start_time)/1000)+"ms taken total per tick")
-                    
         #### Attempted frame rate is defined in settings
         update(settings["frame_rate"])
+        timer = time.time() - start_time
+        last_ms = timer
+        
+        ### Calculate effective fps for this tick
+        efps = int(1/timer)
+        frames += efps
+        ticks += 1
+        avg_fps = frames/ticks
+        if efps < lowest_fps:
+            lowest_fps = efps
         
     #### When player has hit "Escape" key, proceed to erase playfield
     for item in to_draw:
